@@ -34,7 +34,7 @@
     const bytes = decodeBase64(data);
     const file = new File([bytes], fileName, {
       type: fileType || 'application/octet-stream',
-      lastModified: Date.now(),
+      lastModified: Date.now()
     });
 
     // Best case: the page has a real file input. Assigning its `files`
