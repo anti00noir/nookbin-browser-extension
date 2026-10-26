@@ -18,13 +18,33 @@ The content script finds a file input, attaches the file to it, and fires the ev
 
 ```text
 mini-chrome-ext/
-├── manifest.json            # Extension manifest and permissions
-├── popup.html               # Popup markup and styles
-├── popup.js                 # Popup logic and storage/injection orchestration
-├── content.js               # Page-side file injection
-└── lib/
-    └── idb-file-storage.js  # Promise-based IndexedDB wrapper
+├── src/
+│   ├── manifest.json            # Extension manifest and permissions
+│   ├── popup.html               # Popup markup and styles
+│   ├── popup.js                 # Popup logic and storage/injection orchestration
+│   ├── content.js               # Page-side file injection
+│   ├── docs/
+│   │   └── architecture.md      # Detailed architecture notes
+│   └── lib/
+│       └── idb-file-storage.js  # Promise-based IndexedDB wrapper
+├── tests/
+│   ├── unit/
+│   │   └── idb-file-storage.test.js
+│   └── e2e/
+├── package.json
+└── package-lock.json
 ```
 
 There is no build step, bundler, or runtime dependency. The popup uses an ES module; the content script is a classic script because manifest content scripts are not modules.
+
+## Running the tests
+
+Unit tests use Node's built-in test runner and `fake-indexeddb`:
+
+```bash
+npm install
+npm test
+```
+
+Use `npm run test:watch` while working on the storage library. The current suite covers `src/lib/idb-file-storage.js`; end-to-end tests will be added separately.
 
