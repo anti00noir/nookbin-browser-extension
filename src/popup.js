@@ -6,16 +6,64 @@ const STORE_NAME = 'my-files';
 // makes the payload roughly a third larger, so keep this conservative.
 const MAX_INJECT_BYTES = 32 * 1024 * 1024;
 
+const EXTENSION_BADGES = {
+  pdf: 'PDF',
+  doc: 'DOC',
+  docx: 'DOC',
+  xls: 'XLS',
+  xlsx: 'XLS',
+  csv: 'CSV',
+  ppt: 'PPT',
+  pptx: 'PPT',
+  png: 'IMG',
+  jpg: 'IMG',
+  jpeg: 'IMG',
+  gif: 'IMG',
+  webp: 'IMG',
+  svg: 'IMG',
+  txt: 'TXT',
+  md: 'MD',
+  json: 'JSON',
+  zip: 'ZIP',
+  rar: 'ZIP',
+  '7z': 'ZIP',
+};
+
 const dropZone = document.getElementById('dropZone');
 const filePicker = document.getElementById('filePicker');
 const fileList = document.getElementById('fileList');
 const statusEl = document.getElementById('status');
+const addFilesButton = document.getElementById('addFilesButton');
+const fileSummary = document.getElementById('fileSummary');
+const toolbar = document.getElementById('toolbar');
+const searchInput = document.getElementById('searchInput');
+const sortSelect = document.getElementById('sortSelect');
+const emptyState = document.getElementById('emptyState');
+const emptyTitle = document.getElementById('emptyTitle');
+const emptyHint = document.getElementById('emptyHint');
 
 let store = null;
+let entries = [];
+let searchQuery = '';
+let sortMode = 'name';
+let statusTimer = null;
 
 function setStatus(message, type = '') {
+  if (statusTimer) {
+    clearTimeout(statusTimer);
+    statusTimer = null;
+  }
+
   statusEl.textContent = message;
-  statusEl.className = type;
+  statusEl.className = type ? `status ${type}` : 'status';
+
+  if (message && type === 'success') {
+    statusTimer = window.setTimeout(() => {
+      statusEl.textContent = '';
+      statusEl.className = 'status';
+      statusTimer = null;
+    }, 3000);
+  }
 }
 
 function formatSize(bytes) {
@@ -27,7 +75,7 @@ function formatSize(bytes) {
 async function init() {
   try {
     store = await getFileStorage({ name: STORE_NAME });
-    await renderList();
+    await refreshList();
   } catch (error) {
     setStatus(`Could not open file storage: ${error.message}`, 'error');
   }
@@ -54,21 +102,25 @@ async function addFiles(fileListLike) {
   }
 
   if (stored > 0) {
+    // Adding files is an explicit "show me what I just added" action. Clear a
+    // stale filter so the new rows are visible.
+    searchQuery = '';
+    searchInput.value = '';
     setStatus(`Stored ${stored} file${stored === 1 ? '' : 's'}.`, 'success');
   }
   if (errors.length > 0) {
     setStatus(`Could not store ${errors.length} file(s). ${errors[0]}`, 'error');
   }
 
-  await renderList();
+  await refreshList();
 }
 
-async function renderList() {
+async function refreshList() {
   if (!store) return;
 
   try {
     const names = await store.list();
-    const entries = await Promise.all(
+    const loaded = await Promise.all(
       names.map(async (name) => {
         try {
           return { name, blob: await store.get(name) };
@@ -78,60 +130,164 @@ async function renderList() {
       }),
     );
 
-    fileList.replaceChildren();
+    entries = loaded.filter(({ blob }) => blob instanceof Blob);
 
-    for (const { name, blob } of entries) {
-      if (!blob) continue;
-
-      const li = document.createElement('li');
-
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'name';
-      nameSpan.textContent = name;
-      nameSpan.title = name;
-
-      const meta = document.createElement('span');
-      meta.className = 'meta';
-      meta.textContent = formatSize(blob.size);
-
-      const useBtn = document.createElement('button');
-      useBtn.type = 'button';
-      useBtn.textContent = 'Use';
-      useBtn.title = `Send "${name}" to the current page`;
-      useBtn.addEventListener('click', () => {
-        void useFile(name, useBtn);
-      });
-
-      const delBtn = document.createElement('button');
-      delBtn.type = 'button';
-      delBtn.className = 'delete';
-      delBtn.textContent = '\u2715';
-      delBtn.title = `Delete "${name}"`;
-      delBtn.setAttribute('aria-label', `Delete ${name}`);
-      delBtn.addEventListener('click', async () => {
-        delBtn.disabled = true;
-
-        try {
-          await store.remove(name);
-          setStatus(`Removed "${name}".`, 'success');
-          await renderList();
-        } catch (error) {
-          setStatus(`Could not remove "${name}": ${error.message}`, 'error');
-          delBtn.disabled = false;
-        }
-      });
-
-      li.append(nameSpan, meta, useBtn, delBtn);
-      fileList.appendChild(li);
+    if (entries.length === 0) {
+      searchQuery = '';
+      searchInput.value = '';
     }
+
+    renderList();
   } catch (error) {
     setStatus(`Could not read stored files: ${error.message}`, 'error');
   }
 }
 
+function renderList() {
+  const visible = getVisibleEntries();
+  updateSummary(visible.length);
+  toolbar.hidden = entries.length === 0;
+
+  fileList.replaceChildren();
+  emptyState.hidden = visible.length > 0;
+
+  if (visible.length === 0) {
+    if (entries.length === 0) {
+      emptyTitle.textContent = 'No files stored yet';
+      emptyHint.textContent = 'Drop a document below or click add.';
+    } else {
+      emptyTitle.textContent = 'No matching files';
+      emptyHint.textContent = searchQuery.trim()
+        ? `Nothing matches “${searchQuery.trim()}”.`
+        : 'Try a different search.';
+    }
+    return;
+  }
+
+  for (const entry of visible) {
+    fileList.appendChild(createFileRow(entry));
+  }
+}
+
+function updateSummary(visibleCount) {
+  if (entries.length === 0) {
+    fileSummary.textContent = 'No files';
+    return;
+  }
+
+  if (searchQuery.trim() && visibleCount !== entries.length) {
+    fileSummary.textContent = `${visibleCount} of ${entries.length} files`;
+    return;
+  }
+
+  const totalSize = entries.reduce((sum, { blob }) => sum + blob.size, 0);
+  const countLabel = `${entries.length} file${entries.length === 1 ? '' : 's'}`;
+  fileSummary.textContent = `${countLabel} · ${formatSize(totalSize)}`;
+}
+
+function getVisibleEntries() {
+  const query = searchQuery.trim().toLocaleLowerCase();
+  const visible = query
+    ? entries.filter(({ name }) => name.toLocaleLowerCase().includes(query))
+    : [...entries];
+
+  visible.sort((a, b) => {
+    if (sortMode === 'size') {
+      const sizeDifference = b.blob.size - a.blob.size;
+      if (sizeDifference !== 0) return sizeDifference;
+    }
+
+    return a.name.localeCompare(b.name);
+  });
+
+  return visible;
+}
+
+function createFileRow({ name, blob }) {
+  const li = document.createElement('li');
+  li.className = 'file-row';
+
+  const badge = document.createElement('span');
+  badge.className = 'file-badge';
+  badge.textContent = getFileBadge(name, blob);
+  badge.setAttribute('aria-hidden', 'true');
+
+  const info = document.createElement('div');
+  info.className = 'file-info';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'file-name';
+  nameSpan.textContent = name;
+  nameSpan.title = name;
+
+  const meta = document.createElement('span');
+  meta.className = 'file-meta';
+  meta.textContent = formatSize(blob.size);
+
+  info.append(nameSpan, meta);
+
+  const useBtn = document.createElement('button');
+  useBtn.type = 'button';
+  useBtn.className = 'use-button';
+  useBtn.textContent = 'Use';
+  useBtn.title = `Send "${name}" to the current page`;
+  useBtn.setAttribute('aria-label', `Send ${name} to the current page`);
+  useBtn.addEventListener('click', () => {
+    void useFile(name, useBtn);
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'icon-button delete-button';
+  delBtn.textContent = '\u2715';
+  delBtn.title = `Delete "${name}"`;
+  delBtn.setAttribute('aria-label', `Delete ${name}`);
+  delBtn.addEventListener('click', () => {
+    void deleteFile(name, delBtn);
+  });
+
+  li.append(badge, info, useBtn, delBtn);
+  return li;
+}
+
+function getFileBadge(name, blob) {
+  const dot = name.lastIndexOf('.');
+
+  if (dot > -1 && dot < name.length - 1) {
+    const extension = name.slice(dot + 1).toLocaleLowerCase();
+    if (EXTENSION_BADGES[extension]) return EXTENSION_BADGES[extension];
+    if (extension.length <= 4) return extension.toLocaleUpperCase();
+  }
+
+  if (blob.type.startsWith('image/')) return 'IMG';
+  if (blob.type === 'application/pdf') return 'PDF';
+  if (blob.type.startsWith('text/')) return 'TXT';
+  return 'FILE';
+}
+
+async function deleteFile(name, button) {
+  if (!store) return;
+
+  button.disabled = true;
+
+  try {
+    await store.remove(name);
+    setStatus(`Removed "${name}".`, 'success');
+    await refreshList();
+  } catch (error) {
+    setStatus(`Could not remove "${name}": ${error.message}`, 'error');
+    button.disabled = false;
+  }
+}
+
 async function useFile(name, button) {
   if (!store) return;
-  if (button) button.disabled = true;
+
+  const originalLabel = button?.textContent || 'Use';
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Sending…';
+  }
   setStatus('Sending file to the page...');
 
   try {
@@ -165,7 +321,10 @@ async function useFile(name, button) {
   } catch (error) {
     setStatus(friendlyError(error), 'error');
   } finally {
-    if (button) button.disabled = false;
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
   }
 }
 
@@ -221,6 +380,20 @@ function friendlyError(error) {
 
   return message;
 }
+
+addFilesButton.addEventListener('click', () => {
+  filePicker.click();
+});
+
+searchInput.addEventListener('input', () => {
+  searchQuery = searchInput.value;
+  renderList();
+});
+
+sortSelect.addEventListener('change', () => {
+  sortMode = sortSelect.value;
+  renderList();
+});
 
 // Drag-and-drop wiring
 let dragDepth = 0;
@@ -279,15 +452,23 @@ filePicker.addEventListener('change', () => {
   void addFiles(files).catch((error) => setStatus(error.message, 'error'));
 });
 
-// Dropping a file anywhere else in the popup would otherwise navigate the
-// popup to the file.
-window.addEventListener('dragover', (event) => event.preventDefault());
+// Make the whole popup a drop target so a drop outside the footer still stores
+// the file instead of navigating the popup.
+window.addEventListener('dragover', (event) => {
+  event.preventDefault();
+});
 window.addEventListener('drop', (event) => {
   event.preventDefault();
 
-  if (!dropZone.contains(event.target)) {
-    setStatus('Drop files on the box above to store them.', 'error');
+  if (dropZone.contains(event.target)) return;
+
+  const files = event.dataTransfer?.files;
+  if (!files || files.length === 0) {
+    setStatus('No files were dropped.', 'error');
+    return;
   }
+
+  void addFiles(files).catch((error) => setStatus(error.message, 'error'));
 });
 
 void init();

@@ -2,21 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>File Dropper</title>
+  <title>NookBin</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h1>File Dropper</h1>
+  <header class="app-header">
+    <div class="brand">
+      <h1>NookBin</h1>
+      <span id="fileSummary" class="file-summary">No files</span>
+    </div>
+    <button id="addFilesButton" class="icon-button add-button" type="button" title="Add files" aria-label="Add files">
+      <span aria-hidden="true">+</span>
+    </button>
+  </header>
 
-  <div id="dropZone" role="button" tabindex="0" aria-label="Drop files here or click to browse">
-    Drop files here to store
-    <div class="hint">or click to browse</div>
-    <input type="file" id="filePicker" multiple hidden />
+  <div id="toolbar" class="toolbar" hidden>
+    <label class="search-field">
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-3.5-3.5"></path>
+      </svg>
+      <span class="visually-hidden">Search files</span>
+      <input id="searchInput" class="search-input" type="search" placeholder="Search files…" autocomplete="off" spellcheck="false" />
+    </label>
+    <label class="sort-field">
+      <span class="visually-hidden">Sort files</span>
+      <select id="sortSelect" class="sort-select">
+        <option value="name">Name A–Z</option>
+        <option value="size">Largest first</option>
+      </select>
+    </label>
   </div>
 
-  <ul id="fileList"></ul>
+  <main class="list-area">
+    <ul id="fileList" class="file-list"></ul>
+    <div id="emptyState" class="empty-state">
+      <svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"></path>
+        <path d="M14 3v5h5"></path>
+      </svg>
+      <p id="emptyTitle" class="empty-title">No files stored yet</p>
+      <p id="emptyHint" class="empty-hint">Drop a document below or click add.</p>
+    </div>
+  </main>
 
-  <div id="status" role="status" aria-live="polite"></div>
+  <footer class="app-footer">
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <div id="dropZone" class="drop-zone" role="button" tabindex="0" aria-label="Drop files here or click to browse">
+      <span class="drop-zone-icon" aria-hidden="true">+</span>
+      <span>Drop files or click to add</span>
+      <input type="file" id="filePicker" multiple hidden />
+    </div>
+  </footer>
 
   <script src="../popup.js" type="module"></script>
 </body>
