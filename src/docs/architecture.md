@@ -5,8 +5,9 @@
 | File | Responsibility |
 | --- | --- |
 | `manifest.json` | Declares the popup, the content script, permissions, and host access. |
-| `popup.html` | Popup UI: drop zone, stored-file list, and status line. |
-| `popup.js` | Handles drag/drop and file selection, reads and writes storage, renders the file list, and sends the selected file to the active tab. |
+| `popup/popup.html` | Popup UI: header summary, search/sort toolbar, stored-file list, empty state, and footer drop area. |
+| `popup/popup.css` | Popup layout and dark/light theme styles. |
+| `popup.js` | Handles drag/drop and file selection, reads and writes storage, filters and sorts the file list, and sends the selected file to the active tab. |
 | `content.js` | Receives the file payload, rebuilds a `File`, and delivers it to the page. |
 | `lib/idb-file-storage.js` | Opens the extension database and exposes `put`, `get`, `list`, `remove`, and `clear`. |
 
@@ -89,7 +90,7 @@ There is intentionally no background service worker yet. The popup and content s
 
 1. Open `chrome://extensions`.
 2. Enable **Developer mode**.
-3. Click **Load unpacked** and select this project folder.
+3. Click **Load unpacked** and select the `src/` folder.
 4. After changing the code, reload the extension from the extensions page.
 5. Already-open tabs can usually recover automatically through the injection fallback, but refreshing the page is the cleanest option.
 

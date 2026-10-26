@@ -1,4 +1,4 @@
-# File Dropper
+# NookBin
 
 A small Manifest V3 Chrome extension proof of concept for keeping frequently used documents in the extension popup and sending them to a file upload control on the active page.
 
@@ -7,10 +7,11 @@ The current goal is to validate the basic workflow: **store a file once, then re
 ## Current behavior
 
 1. Open the extension popup.
-2. Drop one or more files into the drop zone, or click it to browse.
+2. Drop one or more files into the footer drop area, or click it (or the header **+** button) to browse.
 3. Files are stored in the extension's IndexedDB.
-4. Open a page with an upload form.
-5. Click **Use** next to a stored file.
+4. Search by file name or sort the list by name or size.
+5. Open a page with an upload form.
+6. Click **Use** next to a stored file.
 
 The content script finds a file input, attaches the file to it, and fires the events an upload widget normally listens for. If no file input is found, it falls back to simulating a drag-and-drop on an element that looks like an upload area.
 
@@ -20,9 +21,11 @@ The content script finds a file input, attaches the file to it, and fires the ev
 mini-chrome-ext/
 ├── src/
 │   ├── manifest.json            # Extension manifest and permissions
-│   ├── popup.html               # Popup markup and styles
-│   ├── popup.js                 # Popup logic and storage/injection orchestration
 │   ├── content.js               # Page-side file injection
+│   ├── popup.js                 # Popup logic and storage/injection orchestration
+│   ├── popup/
+│   │   ├── popup.html           # Popup markup
+│   │   └── popup.css            # Popup styles
 │   ├── docs/
 │   │   └── architecture.md      # Detailed architecture notes
 │   └── lib/
