@@ -7,11 +7,11 @@
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_title": "File Dropper",
-    "default_popup": "popup.html"
+    "default_popup": "src/popup.html"
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "js": ["content.js"],
+    "js": ["src/content.js"],
     "run_at": "document_idle"
   }]
 }

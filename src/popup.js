@@ -1,4 +1,4 @@
-import { getFileStorage } from '../lib/idb-file-storage.js';
+import { getFileStorage } from 'src/lib/idb-file-storage.js';
 
 const STORE_NAME = 'my-files';
 
