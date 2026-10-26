@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>File Dropper</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>File Dropper</h1>
+
+  <div id="dropZone" role="button" tabindex="0" aria-label="Drop files here or click to browse">
+    Drop files here to store
+    <div class="hint">or click to browse</div>
+    <input type="file" id="filePicker" multiple hidden />
+  </div>
+
+  <ul id="fileList"></ul>
+
+  <div id="status" role="status" aria-live="polite"></div>
+
+  <script src="../popup.js" type="module"></script>
+</body>
+</html>
