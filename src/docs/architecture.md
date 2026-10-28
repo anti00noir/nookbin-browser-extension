@@ -5,11 +5,12 @@
 | File | Responsibility |
 | --- | --- |
 | `manifest.json` | Declares the popup, the content script, permissions, and host access. |
-| `popup/popup.html` | Popup UI: header summary, search/sort toolbar, stored-file list, empty state, and footer drop area. |
-| `popup/popup.css` | Popup layout and dark/light theme styles. |
+| `popup/popup.html` | Popup UI: header, library heading, search and filters, stored-file list, empty state, drop guide, and storage footer. |
+| `popup/popup.css` | Popup layout and charcoal theme styles. |
 | `popup.js` | Handles drag/drop and file selection, reads and writes storage, filters and sorts the file list, and sends the selected file to the active tab. |
 | `content.js` | Receives the file payload, rebuilds a `File`, and delivers it to the page. |
 | `lib/idb-file-storage.js` | Opens the extension database and exposes `put`, `get`, `list`, `remove`, and `clear`. |
+| `fonts/` | Bundled IBM Plex Mono Web Fonts (SIL Open Font License). |
 
 ### Storage model
 

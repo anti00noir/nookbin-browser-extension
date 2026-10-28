@@ -7,11 +7,11 @@ The current goal is to validate the basic workflow: **store a file once, then re
 ## Current behavior
 
 1. Open the extension popup.
-2. Drop one or more files into the footer drop area, or click it (or the header **+** button) to browse.
+2. Drop one or more files into the drop guide, or click it (or the header **Add files** button) to browse.
 3. Files are stored in the extension's IndexedDB.
-4. Search by file name or sort the list by name or size.
+4. Search, filter by PDF/Images, or sort the list by name or size.
 5. Open a page with an upload form.
-6. Click **Use** next to a stored file.
+6. Click the send icon next to a stored file.
 
 The content script finds a file input, attaches the file to it, and fires the events an upload widget normally listens for. If no file input is found, it falls back to simulating a drag-and-drop on an element that looks like an upload area.
 
@@ -28,6 +28,9 @@ mini-chrome-ext/
 │   │   └── popup.css            # Popup styles
 │   ├── docs/
 │   │   └── architecture.md      # Detailed architecture notes
+│   ├── fonts/
+│   │   ├── ibm-plex-mono-*.woff2 # Bundled popup typeface
+│   │   └── OFL.txt              # Font license
 │   └── lib/
 │       └── idb-file-storage.js  # Promise-based IndexedDB wrapper
 ├── tests/
