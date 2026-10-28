@@ -2,57 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="color-scheme" content="dark" />
   <title>NookBin</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <header class="app-header">
     <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5Z"></path>
+          <path d="M4 7.5 12 12l8-4.5M12 12v9"></path>
+        </svg>
+      </span>
       <h1>NookBin</h1>
-      <span id="fileSummary" class="file-summary">No files</span>
     </div>
-    <button id="addFilesButton" class="icon-button add-button" type="button" title="Add files" aria-label="Add files">
-      <span aria-hidden="true">+</span>
+    <button id="addFilesButton" class="add-button" type="button" title="Add files" aria-label="Add files">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      <span>Add files</span>
     </button>
   </header>
 
-  <div id="toolbar" class="toolbar" hidden>
+  <section class="library-heading" aria-labelledby="libraryTitle">
+    <div class="library-copy">
+      <h2 id="libraryTitle">Your library</h2>
+      <p>Stored locally, ready to drop.</p>
+    </div>
+    <span id="fileCount" class="file-count" aria-label="0 stored files">00</span>
+  </section>
+
+  <div id="libraryControls" class="library-controls" hidden>
     <label class="search-field">
-      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="11" cy="11" r="7"></circle>
-        <path d="m20 20-3.5-3.5"></path>
+      <svg class="search-icon icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5"></circle>
+        <path d="m16 16 4 4"></path>
       </svg>
       <span class="visually-hidden">Search files</span>
       <input id="searchInput" class="search-input" type="search" placeholder="Search files…" autocomplete="off" spellcheck="false" />
+      <span class="search-shortcut" aria-hidden="true">/</span>
     </label>
-    <label class="sort-field">
-      <span class="visually-hidden">Sort files</span>
-      <select id="sortSelect" class="sort-select">
-        <option value="name">Name A–Z</option>
-        <option value="size">Largest first</option>
-      </select>
-    </label>
+
+    <div class="library-toolbar">
+      <div class="filters" role="group" aria-label="Filter files">
+        <button class="filter is-active" type="button" data-filter="all" aria-pressed="true">All files</button>
+        <button class="filter" type="button" data-filter="pdf" aria-pressed="false">PDF</button>
+        <button class="filter" type="button" data-filter="images" aria-pressed="false">Images</button>
+      </div>
+      <label class="sort-control">
+        <span class="visually-hidden">Sort files</span>
+        <select id="sortSelect" class="sort-select">
+          <option value="name">Name</option>
+          <option value="size">Size</option>
+        </select>
+        <svg class="sort-icon icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m7 10 5 5 5-5"></path>
+        </svg>
+      </label>
+    </div>
   </div>
 
   <main class="list-area">
     <ul id="fileList" class="file-list"></ul>
     <div id="emptyState" class="empty-state">
-      <svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <svg class="empty-icon icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"></path>
         <path d="M14 3v5h5"></path>
       </svg>
-      <p id="emptyTitle" class="empty-title">No files stored yet</p>
-      <p id="emptyHint" class="empty-hint">Drop a document below or click add.</p>
+      <p id="emptyTitle" class="empty-title">No files yet</p>
+      <p id="emptyHint" class="empty-hint">Drop a file below or use Add files.</p>
     </div>
   </main>
 
-  <footer class="app-footer">
-    <div id="status" class="status" role="status" aria-live="polite"></div>
-    <div id="dropZone" class="drop-zone" role="button" tabindex="0" aria-label="Drop files here or click to browse">
-      <span class="drop-zone-icon" aria-hidden="true">+</span>
-      <span>Drop files or click to add</span>
-      <input type="file" id="filePicker" multiple hidden />
+  <div id="dropZone" class="drop-guide" role="button" tabindex="0" aria-label="Drop files here or click to browse">
+    <span class="drag-symbol" aria-hidden="true">
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M12 4v10"></path>
+        <path d="m8 10 4 4 4-4"></path>
+        <path d="M5 19h14"></path>
+      </svg>
+    </span>
+    <span class="drop-copy">
+      <span class="drop-title">Drop files here</span>
+      <span class="drop-hint">or click to add files</span>
+    </span>
+    <input type="file" id="filePicker" multiple hidden />
+  </div>
+
+  <footer class="storage-footer">
+    <div id="localStatus" class="local-status" data-state="idle">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="status" class="status" role="status" aria-live="polite">Local only</span>
     </div>
+    <span id="storageSummary" class="storage-summary">0 B stored</span>
   </footer>
 
   <script src="../popup.js" type="module"></script>
