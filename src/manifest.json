@@ -1,17 +1,38 @@
 {
   "manifest_version": 3,
   "name": "NookBin",
-  "version": "0.1",
-  "description": "Store documents in the popup and send them to file upload fields on the current page.",
-  "permissions": ["scripting", "unlimitedStorage"],
+  "version": "0.2",
+  "minimum_chrome_version": "114",
+  "description": "Store documents in a floating panel and send them to file upload fields on the current page.",
+  "permissions": ["scripting", "storage", "unlimitedStorage"],
   "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_title": "NookBin",
-    "default_popup": "popup/popup.html"
+    "default_title": "Toggle NookBin panel"
+  },
+  "commands": {
+    "toggle-panel": {
+      "suggested_key": {
+        "default": "Alt+Shift+N"
+      },
+      "description": "Toggle the NookBin panel"
+    }
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "js": ["content.js"],
+    "js": ["lib/panel-position.js", "content.js"],
     "run_at": "document_idle"
+  }],
+  "web_accessible_resources": [{
+    "resources": [
+      "popup/popup.html",
+      "popup/popup.css",
+      "popup.js",
+      "lib/idb-file-storage.js",
+      "fonts/*"
+    ],
+    "matches": ["<all_urls>"]
   }]
 }
