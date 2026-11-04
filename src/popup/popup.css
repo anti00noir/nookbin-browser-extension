@@ -53,13 +53,16 @@
 }
 
 html {
+  height: 100%;
   background: var(--bg);
 }
 
 body {
-  width: 540px;
-  height: 600px;
-  margin: 0;
+  width: 100%;
+  max-width: 540px;
+  height: 100%;
+  max-height: 600px;
+  margin: 0 auto;
   padding: 24px 32px 20px;
   display: flex;
   flex-direction: column;
@@ -68,6 +71,11 @@ body {
   color: var(--text);
   font-family: var(--font-mono);
   -webkit-font-smoothing: antialiased;
+}
+
+html.is-embedded body {
+  max-width: none;
+  max-height: none;
 }
 
 button,
@@ -114,6 +122,77 @@ button {
   justify-content: space-between;
   height: 40px;
   margin-bottom: 16px;
+}
+
+.header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.drag-handle {
+  display: none;
+  flex: 0 0 14px;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 28px;
+  color: var(--muted);
+}
+
+.drag-handle .icon {
+  width: 14px;
+  height: 22px;
+}
+
+.drag-icon circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.panel-action {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.panel-action .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.panel-action:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.is-embedded .drag-handle,
+.is-embedded .panel-action {
+  display: flex;
+}
+
+.is-embedded .app-header {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.is-embedded .app-header.is-dragging {
+  cursor: grabbing;
+}
+
+.is-embedded .app-header button {
+  cursor: pointer;
 }
 
 .brand {
@@ -695,6 +774,75 @@ h1 {
   color: var(--muted);
   font-size: 10px;
   line-height: 13px;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 16px;
+  }
+
+  .app-header {
+    flex-basis: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .brand-mark {
+    flex-basis: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .brand-mark .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .add-button {
+    flex-basis: 36px;
+    width: 36px;
+    padding: 0;
+  }
+
+  .add-button span {
+    display: none;
+  }
+
+  .library-copy h2 {
+    font-size: 24px;
+    line-height: 28px;
+  }
+
+  .file-count {
+    font-size: 38px;
+    line-height: 42px;
+  }
+
+  .filters {
+    gap: 12px;
+  }
+
+  .filter {
+    width: 56px;
+  }
+
+  .filter[data-filter="pdf"] {
+    width: 22px;
+  }
+
+  .file-row {
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .file-actions {
+    gap: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
