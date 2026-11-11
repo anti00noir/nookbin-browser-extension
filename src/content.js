@@ -65,9 +65,18 @@
       lastModified: Date.now()
     });
 
+    // Sites can override both strategies below. See SITE_ADAPTERS.
+    const adapter = adapterForHost();
+
     // Best case: the page has a real file input. Assigning its `files`
     // property and firing `change` is what most upload widgets listen for.
-    const fileInput = document.querySelector('input[type="file"]');
+    // The input must actually accept the file: feeding a document to an
+    // image-only input makes pages like Outlook reject it with a file
+    // format error.
+    const fileInput = adapter?.findFileInput
+      ? adapter.findFileInput({ file, fileType, fileName })
+      : findAcceptingFileInput(fileType, fileName);
+
     if (fileInput) {
       const transfer = new DataTransfer();
       transfer.items.add(file);
@@ -81,12 +90,105 @@
     // Fallback: simulate a drag-and-drop onto something that looks like an
     // upload area. This is page-specific and may need adjusting per site.
     const dropTarget =
-      document.querySelector('[class*="upload"], [id*="upload"]') || document.body;
+      adapter?.findDropTarget?.() ||
+      document.querySelector('[class*="upload"], [id*="upload"]') ||
+      document.body;
+
+    dispatchSyntheticDrop(dropTarget, file, fileName);
+
+    if (dropTarget === document.body) return 'document body';
+    return adapter ? 'site drop target' : 'upload area';
+  }
+
+  // ---------------------------------------------------------------------------
+  // File injection helpers
+  // ---------------------------------------------------------------------------
+
+  // Per-site overrides for the injection strategies above. Keyed by hostname;
+  // entries also match subdomains. Only add an adapter when a site's generic
+  // behavior cannot be fixed by the shared logic, and keep each adapter to the
+  // smallest override that works.
+  const SITE_ADAPTERS = {
+    // Outlook web app attaches non-image files correctly when they are dropped
+    // on the compose body, but pushing them through one of its file inputs
+    // feeds the insert-picture pipeline, which rejects non-images. Prefer the
+    // drop simulation on the compose area, and never use its file inputs.
+    'outlook.office.com': createOutlookAdapter,
+    'outlook.office365.com': createOutlookAdapter,
+    'outlook.live.com': createOutlookAdapter,
+  };
+
+  function adapterForHost() {
+    const host = window.location.hostname.toLowerCase();
+    for (const [domain, create] of Object.entries(SITE_ADAPTERS)) {
+      if (host === domain || host.endsWith(`.${domain}`)) return create();
+    }
+    return null;
+  }
+
+  function createOutlookAdapter() {
+    return {
+      findFileInput() {
+        return null;
+      },
+      findDropTarget() {
+        // The compose body is the editable rich-text area of the draft.
+        return (
+          document.querySelector('[contenteditable="true"][role="textbox"]') ||
+          document.querySelector('[role="textbox"]')
+        );
+      },
+    };
+  }
+
+  // Pick the first file input that can accept this file. Inputs without an
+  // `accept` attribute accept anything; inputs with one are checked against
+  // the file's MIME type and extension.
+  function findAcceptingFileInput(fileType, fileName) {
+    for (const input of document.querySelectorAll('input[type="file"]')) {
+      if (canInputAccept(input, fileType, fileName)) return input;
+    }
+    return null;
+  }
+
+  function canInputAccept(input, fileType, fileName) {
+    const accept = input.getAttribute('accept');
+    if (!accept || !accept.trim()) return true;
+
+    const mimeType = (fileType || '').split(';')[0].trim().toLowerCase();
+    const mimeBase = mimeType.split('/')[0];
+    const extension = getFileExtension(fileName);
+
+    return accept.split(',').some((token) => {
+      const pattern = token.trim().toLowerCase();
+      if (!pattern) return false;
+      if (pattern.startsWith('.')) return pattern === extension;
+      if (pattern.endsWith('/*')) return mimeBase !== '' && pattern === `${mimeBase}/*`;
+      return pattern === mimeType;
+    });
+  }
+
+  function getFileExtension(fileName) {
+    const index = fileName.lastIndexOf('.');
+    if (index <= 0) return '';
+    return fileName.slice(index).toLowerCase();
+  }
+
+  function dispatchSyntheticDrop(target, file, fileName) {
     const transfer = new DataTransfer();
     transfer.items.add(file);
 
+    // Some handlers (Outlook among them) re-inspect the transfer beyond the
+    // file itself; a plain-text fallback carrying the file name makes the
+    // event look more like a real OS drag.
+    try {
+      transfer.setData('text/plain', fileName);
+    } catch {
+      // The file item is what matters; text data is best-effort.
+    }
+
     for (const type of ['dragenter', 'dragover', 'drop']) {
-      dropTarget.dispatchEvent(
+      target.dispatchEvent(
         new DragEvent(type, {
           bubbles: true,
           cancelable: true,
@@ -95,8 +197,6 @@
         }),
       );
     }
-
-    return dropTarget === document.body ? 'document body' : 'upload area';
   }
 
   function decodeBase64(base64) {
