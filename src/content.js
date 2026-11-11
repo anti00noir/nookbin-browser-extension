@@ -94,7 +94,7 @@
       document.querySelector('[class*="upload"], [id*="upload"]') ||
       document.body;
 
-    dispatchSyntheticDrop(dropTarget, file, fileName);
+    await dispatchSyntheticDrop(dropTarget, file, fileName);
 
     if (dropTarget === document.body) return 'document body';
     return adapter ? 'site drop target' : 'upload area';
@@ -133,12 +133,31 @@
       },
       findDropTarget() {
         // The compose body is the editable rich-text area of the draft.
-        return (
-          document.querySelector('[contenteditable="true"][role="textbox"]') ||
-          document.querySelector('[role="textbox"]')
-        );
+        return findComposeTextbox(document);
       },
     };
+  }
+
+  function findComposeTextbox(rootDocument) {
+    const direct =
+      rootDocument.querySelector('[contenteditable="true"][role="textbox"]') ||
+      rootDocument.querySelector('[role="textbox"]');
+    if (direct) return direct;
+
+    // Some compose surfaces are hosted in a same-origin iframe; the content
+    // script only sees the top document, so search those frames too.
+    for (const frame of rootDocument.querySelectorAll('iframe')) {
+      try {
+        const inner = frame.contentDocument;
+        const nested =
+          inner?.querySelector('[contenteditable="true"][role="textbox"]') ||
+          inner?.querySelector('[role="textbox"]');
+        if (nested) return nested;
+      } catch {
+        // Cross-origin frames cannot be inspected.
+      }
+    }
+    return null;
   }
 
   // Pick the first file input that can accept this file. Inputs without an
@@ -174,7 +193,13 @@
     return fileName.slice(index).toLowerCase();
   }
 
-  function dispatchSyntheticDrop(target, file, fileName) {
+  // Handlers backed by React (Outlook web app among them) commit drag state
+  // between events. Firing the whole sequence in one tick means the drop can
+  // arrive before that state exists, so the drop is ignored. Spread the
+  // events out like a real drag.
+  const DRAG_STEP_DELAY_MS = 60;
+
+  async function dispatchSyntheticDrop(target, file, fileName) {
     const transfer = new DataTransfer();
     transfer.items.add(file);
 
@@ -187,6 +212,12 @@
       // The file item is what matters; text data is best-effort.
     }
 
+    try {
+      transfer.effectAllowed = 'copy';
+    } catch {
+      // Read-only on some platforms; the file item is what matters.
+    }
+
     for (const type of ['dragenter', 'dragover', 'drop']) {
       target.dispatchEvent(
         new DragEvent(type, {
@@ -196,6 +227,9 @@
           dataTransfer: transfer,
         }),
       );
+      if (type !== 'drop') {
+        await new Promise((resolve) => setTimeout(resolve, DRAG_STEP_DELAY_MS));
+      }
     }
   }
 
