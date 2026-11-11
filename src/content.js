@@ -109,10 +109,12 @@
   // behavior cannot be fixed by the shared logic, and keep each adapter to the
   // smallest override that works.
   const SITE_ADAPTERS = {
-    // Outlook web app attaches non-image files correctly when they are dropped
-    // on the compose body, but pushing them through one of its file inputs
-    // feeds the insert-picture pipeline, which rejects non-images. Prefer the
-    // drop simulation on the compose area, and never use its file inputs.
+    // Outlook web app attaches non-image files through its "browse this
+    // computer" inputs (data-testid="local-computer-filein"), one per ribbon
+    // command. The insert-picture input is image-only and gets skipped by the
+    // shared accept filter, leaving the neutral inputs behind it. Synthetic
+    // drops are not an option here: OWA found them on the compose body and
+    // ignored them because they are not trusted events.
     'outlook.office.com': createOutlookAdapter,
     'outlook.office365.com': createOutlookAdapter,
     'outlook.live.com': createOutlookAdapter,
@@ -128,11 +130,26 @@
 
   function createOutlookAdapter() {
     return {
-      findFileInput() {
-        return null;
+      findFileInput({ fileType, fileName }) {
+        const inputs = [...document.querySelectorAll('input[type="file"]')];
+        const accepting = inputs.filter((input) =>
+          canInputAccept(input, fileType, fileName),
+        );
+        if (accepting.length === 0) return null;
+
+        // Prefer an input tied to the attach flow; fall back to the first
+        // neutral input when OWA's DOM does not expose the connection.
+        return (
+          accepting.find(
+            (input) =>
+              input.closest('[aria-label*="attach" i], [data-testid*="attach" i]') !==
+              null,
+          ) || accepting[0]
+        );
       },
       findDropTarget() {
-        // The compose body is the editable rich-text area of the draft.
+        // Fallback only: OWA ignores synthetic drops, but keep the compose
+        // body targeting in case a future version listens again.
         return findComposeTextbox(document);
       },
     };
