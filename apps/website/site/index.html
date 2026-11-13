@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
+  <meta name="description" content="NookSuite — small, local-first browser tools. Files and notes that stay on your machine." />
   <title>NookSuite</title>
   <link rel="stylesheet" href="css/site.css" />
 </head>
@@ -11,9 +12,18 @@
   <main class="page">
     <header class="site-header">
       <span class="wordmark">NookSuite</span>
+      <!-- Point this at the repository once it is published. -->
+      <a class="header-link" href="#">GitHub</a>
     </header>
-    <h1>NookSuite</h1>
-    <p>Overview site under construction.</p>
+
+    <section class="hero">
+      <h1 class="hero-title">Small tools that stay out of your way.</h1>
+      <p class="hero-sub">
+        NookSuite is a set of local-first browser tools. Your files and notes
+        stay on your own machine, permissions stay minimal, and nothing phones
+        home. Extensions today; native apps tomorrow.
+      </p>
+    </section>
 
     <section class="tools" aria-labelledby="tools-title">
       <h2 id="tools-title" class="section-title">The tools</h2>
@@ -21,6 +31,50 @@
         <!-- tool-cards -->
       </div>
     </section>
+
+    <section class="principles" aria-labelledby="principles-title">
+      <h2 id="principles-title" class="section-title">Principles</h2>
+      <ul class="principle-list">
+        <li>
+          <span class="principle-name">Local-first</span>
+          <span class="principle-copy">Your files stay on your machine. Nothing is uploaded anywhere.</span>
+        </li>
+        <li>
+          <span class="principle-name">No accounts</span>
+          <span class="principle-copy">Install and use. No sign-ups, no sync walls.</span>
+        </li>
+        <li>
+          <span class="principle-name">No telemetry</span>
+          <span class="principle-copy">The tools do not collect, report, or phone home.</span>
+        </li>
+        <li>
+          <span class="principle-name">Minimal permissions</span>
+          <span class="principle-copy">Each tool asks for only what its feature needs.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="roadmap" aria-labelledby="roadmap-title">
+      <h2 id="roadmap-title" class="section-title">Roadmap</h2>
+      <ol class="roadmap-list">
+        <li>
+          <span class="phase">Now</span>
+          <span class="phase-copy">NookBin &mdash; a floating file panel for Chrome.</span>
+        </li>
+        <li>
+          <span class="phase">Next</span>
+          <span class="phase-copy">Harden NookBin, and shape NookEdit and NookNotes.</span>
+        </li>
+        <li>
+          <span class="phase">Later</span>
+          <span class="phase-copy">Native ports of each tool, sharing one core.</span>
+        </li>
+      </ol>
+    </section>
   </main>
+
+  <footer class="site-footer">
+    <p>NookSuite &copy; 2026 &middot; Typeface: IBM Plex Mono, SIL Open Font License</p>
+  </footer>
 </body>
 </html>
