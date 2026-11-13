@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const source = await readFile(
-  new URL('../../src/lib/panel-position.js', import.meta.url),
+  new URL('../../tools/nookbin/extension/src/lib/panel-position.js', import.meta.url),
   'utf8',
 );
 
