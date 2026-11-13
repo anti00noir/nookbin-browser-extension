@@ -3,7 +3,7 @@
 
 const PANEL_PAGE = 'popup/popup.html';
 const FALLBACK_WINDOW_KEY = 'nookbinFallbackWindowId';
-const CONTENT_SCRIPTS = ['lib/panel-position.js', 'content.js'];
+const CONTENT_SCRIPTS = ['content.js'];
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.action.setTitle({ title: 'Toggle NookBin panel' });

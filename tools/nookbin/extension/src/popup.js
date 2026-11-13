@@ -425,7 +425,7 @@ async function sendToTab(tabId, message) {
     // do not have the content script yet. Inject it and retry once.
     await chrome.scripting.executeScript({
       target: { tabId, frameIds: [0] },
-      files: ['lib/panel-position.js', 'content.js'],
+      files: ['content.js'],
     });
 
     return chrome.tabs.sendMessage(tabId, message, { frameId: 0 });

@@ -6,6 +6,10 @@
 // Content scripts cannot read the extension's IndexedDB directly, so the popup
 // sends the file data in the message.
 
+// Loaded for its side effect: registers the panel geometry helpers on
+// globalThis. Bundled ahead of the IIFE below by build.mjs.
+import './lib/panel-position.js';
+
 (() => {
   const LOADED_FLAG = '__fileDropperContentScriptLoaded';
 

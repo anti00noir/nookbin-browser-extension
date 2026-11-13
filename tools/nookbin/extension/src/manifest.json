@@ -22,7 +22,7 @@
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "js": ["lib/panel-position.js", "content.js"],
+    "js": ["content.js"],
     "run_at": "document_idle"
   }],
   "web_accessible_resources": [{
@@ -30,7 +30,6 @@
       "popup/popup.html",
       "popup/popup.css",
       "popup.js",
-      "lib/idb-file-storage.js",
       "fonts/*"
     ],
     "matches": ["<all_urls>"]
