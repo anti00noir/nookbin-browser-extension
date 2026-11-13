@@ -13,10 +13,9 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "test": "node --test \"tests/unit/**/*.test.js\""
+    "test": "npm test --workspaces --if-present"
   },
   "devDependencies": {
-    "esbuild": "^0.27.2",
-    "fake-indexeddb": "^6.2.6"
+    "esbuild": "^0.27.2"
   }
 }

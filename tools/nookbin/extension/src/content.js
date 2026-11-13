@@ -6,9 +6,7 @@
 // Content scripts cannot read the extension's IndexedDB directly, so the popup
 // sends the file data in the message.
 
-// Loaded for its side effect: registers the panel geometry helpers on
-// globalThis. Bundled ahead of the IIFE below by build.mjs.
-import './lib/panel-position.js';
+import { clampPosition, getDefaultPosition, getPanelSize } from '@nooksuite/core';
 
 (() => {
   const LOADED_FLAG = '__fileDropperContentScriptLoaded';
@@ -294,13 +292,8 @@ import './lib/panel-position.js';
   async function openPanel() {
     if (panel) return panel;
 
-    const geometry = globalThis.NookBinPanelPosition;
-    if (!geometry) {
-      throw new Error('The panel geometry helpers were not loaded.');
-    }
-
-    const size = geometry.getPanelSize(window.innerWidth, window.innerHeight);
-    let position = geometry.getDefaultPosition(
+    const size = getPanelSize(window.innerWidth, window.innerHeight);
+    let position = getDefaultPosition(
       window.innerWidth,
       window.innerHeight,
       size,
@@ -534,12 +527,9 @@ import './lib/panel-position.js';
   function clampPanelToViewport() {
     if (!panel) return;
 
-    const geometry = globalThis.NookBinPanelPosition;
-    if (!geometry) return;
-
-    const size = geometry.getPanelSize(window.innerWidth, window.innerHeight);
+    const size = getPanelSize(window.innerWidth, window.innerHeight);
     panel.size = size;
-    panel.position = geometry.clampPosition(
+    panel.position = clampPosition(
       panel.position,
       window.innerWidth,
       window.innerHeight,
@@ -593,10 +583,7 @@ import './lib/panel-position.js';
   function movePanelDrag(event) {
     if (!panel?.dragStart) return;
 
-    const geometry = globalThis.NookBinPanelPosition;
-    if (!geometry) return;
-
-    const next = geometry.clampPosition(
+    const next = clampPosition(
       {
         left: panel.dragStart.left + (event.screenX - panel.dragStart.screenX),
         top: panel.dragStart.top + (event.screenY - panel.dragStart.screenY),
@@ -625,10 +612,7 @@ import './lib/panel-position.js';
   function dockPanelRight() {
     if (!panel) return;
 
-    const geometry = globalThis.NookBinPanelPosition;
-    if (!geometry) return;
-
-    const position = geometry.getDefaultPosition(
+    const position = getDefaultPosition(
       window.innerWidth,
       window.innerHeight,
       panel.size,

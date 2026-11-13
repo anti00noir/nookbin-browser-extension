@@ -1,4 +1,4 @@
-import { getFileStorage } from './lib/idb-file-storage.js';
+import { getFileStorage } from '@nooksuite/core';
 
 const STORE_NAME = 'my-files';
 const IDLE_STATUS = 'Local only';
