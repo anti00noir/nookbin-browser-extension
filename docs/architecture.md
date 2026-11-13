@@ -1,18 +1,32 @@
 ## Architecture
 
+NookBin lives in `tools/nookbin/extension`; shared, target-agnostic logic it
+imports lives in `packages/core` (`@nooksuite/core`). Paths below are relative
+to those roots.
+
 ### Components
 
 | File | Responsibility |
 | --- | --- |
-| `manifest.json` | Declares the service worker, content scripts, permissions, keyboard shortcut, web-accessible panel files, and host access. |
+| `tools/nookbin/extension/src/manifest.json` | Declares the service worker, content scripts, permissions, keyboard shortcut, web-accessible panel files, and host access. |
 | `background.js` | Handles toolbar clicks and the **Alt+Shift+N** shortcut, toggles the in-page panel, injects the content script into older tabs, and opens a standalone fallback window on restricted pages. |
 | `content.js` | Owns the floating panel host, handles dragging/docking/closing, keeps the panel above fullscreen content, and delivers files to the page. |
 | `popup/popup.html` | Panel UI: header, library heading, search and filters, stored-file list, empty state, drop guide, and storage footer. |
 | `popup/popup.css` | Responsive panel layout and charcoal theme styles. |
 | `popup.js` | Handles drag/drop and file selection, reads and writes storage, filters and sorts the file list, sends the selected file to the active tab, and talks to the panel host. |
-| `lib/idb-file-storage.js` | Opens the extension database and exposes `put`, `get`, `list`, `remove`, and `clear`. |
-| `lib/panel-position.js` | Pure geometry helpers for sizing the panel, docking it to the right, and keeping it inside the viewport. |
+| `packages/core/src/panel-position.js` | Pure geometry helpers for sizing the panel, docking it to the right, and keeping it inside the viewport. |
+| `packages/core/src/file-storage.js` | File storage interface with shared input validation. |
+| `packages/core/src/backends/idb-file-storage.js` | IndexedDB implementation of that interface. |
 | `fonts/` | Bundled IBM Plex Mono Web Fonts (SIL Open Font License). |
+
+### Bundling
+
+`build.mjs` runs esbuild with three entry points (`background.js`,
+`content.js`, `popup.js`) and copies static assets (manifest, popup pages,
+fonts) into `dist/` with sourcemaps. The bundled scripts are self-contained
+IIFEs targeting Chrome 114, so the manifest references flat files and the
+content script can `import` from `@nooksuite/core` even though manifest content
+scripts cannot be ES modules. Chrome must load the extension from `dist/`.
 
 ### Floating panel
 
@@ -30,6 +44,16 @@ The panel's iframe is web-accessible so it can be loaded from a content script. 
 
 ### Storage model
 
+Storage is split into an interface and a backend in `@nooksuite/core` so future
+targets (such as a native port) can swap the backend without changing callers:
+
+- `file-storage.js` exposes `createFileStorage(backend)`, which validates keys
+  (non-empty strings) and values (`Blob`/`File`) and delegates persistence to
+  the backend.
+- `backends/idb-file-storage.js` implements the backend with IndexedDB. Files
+  are keyed by name in a single object store, so adding a file with an existing
+  name replaces the previous entry.
+
 Stored documents live in the extension's own IndexedDB:
 
 - Database: `my-files`
@@ -37,8 +61,6 @@ Stored documents live in the extension's own IndexedDB:
 - Object store: `files`
 - Key: file name
 - Value: the stored `File` / `Blob`
-
-Because the key is the file name, adding a file with an existing name replaces the previous entry.
 
 This is extension-origin storage. Content scripts run in the page's origin and therefore cannot read it directly; the panel is responsible for reading files and passing them to the page.
 
@@ -73,7 +95,9 @@ or:
 { ok: false, error: string }
 ```
 
-If no content script is listening, the panel injects `lib/panel-position.js` and `content.js` with `chrome.scripting.executeScript()` and retries once. This covers tabs that were already open when the extension was installed or reloaded.
+If no content script is listening, the panel injects the bundled `content.js`
+with `chrome.scripting.executeScript()` and retries once. This covers tabs that
+were already open when the extension was installed or reloaded.
 
 The transfer is currently capped at **32 MB** because the base64 payload is sent through extension messaging.
 
@@ -112,11 +136,12 @@ The extension requires Chrome 114 or newer because the floating panel relies on 
 
 ### Loading the extension
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Click **Load unpacked** and select the `src/` folder.
-4. After changing the code, reload the extension from the extensions page.
-5. Already-open tabs can usually recover automatically through the injection fallback, but refreshing the page is the cleanest option.
+1. Run `npm run build` from the repo root (or `npm run dev` for watch mode).
+2. Open `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Click **Load unpacked** and select the `tools/nookbin/extension/dist/` folder.
+5. After changing the code, reload the extension from the extensions page.
+6. Already-open tabs can usually recover automatically through the injection fallback, but refreshing the page is the cleanest option.
 
 ### Current limitations
 
