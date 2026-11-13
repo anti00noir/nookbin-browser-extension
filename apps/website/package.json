@@ -1,0 +1,11 @@
+{
+  "name": "@nooksuite/website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Overview website for the NookSuite tools.",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "@nooksuite/nookbin-desktop",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Reserved for a future native (desktop) port of NookBin."
+}

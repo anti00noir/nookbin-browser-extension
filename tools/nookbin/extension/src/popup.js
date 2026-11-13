@@ -1,4 +1,4 @@
-import { getFileStorage } from './lib/idb-file-storage.js';
+import { getFileStorage } from '@nooksuite/core';
 
 const STORE_NAME = 'my-files';
 const IDLE_STATUS = 'Local only';
@@ -65,6 +65,15 @@ const emptyState = document.getElementById('emptyState');
 const emptyTitle = document.getElementById('emptyTitle');
 const emptyHint = document.getElementById('emptyHint');
 const filterButtons = [...document.querySelectorAll('.filter')];
+const dockPanelButton = document.getElementById('dockPanelButton');
+const closePanelButton = document.getElementById('closePanelButton');
+
+const isEmbedded = window.parent !== window
+  || new URLSearchParams(window.location.search).has('embedded');
+const isStandalone = !isEmbedded
+  && new URLSearchParams(window.location.search).has('standalone');
+
+document.documentElement.classList.toggle('is-embedded', isEmbedded);
 
 let store = null;
 let entries = [];
@@ -373,7 +382,7 @@ async function useFile(name, button) {
       );
     }
 
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getTargetTab();
     if (!tab || typeof tab.id !== 'number') {
       throw new Error('No active tab was found.');
     }
@@ -455,6 +464,38 @@ function friendlyError(error) {
   return message;
 }
 
+async function getTargetTab() {
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!activeTab || typeof activeTab.id !== 'number') return activeTab;
+
+  // The in-page panel is embedded in the page tab, so the active tab is the
+  // right target. The standalone fallback window, however, is itself the
+  // active tab; in that case, use the last focused normal browser window.
+  if (!isStandalone) return activeTab;
+
+  try {
+    const normalWindow = await chrome.windows.getLastFocused({
+      windowTypes: ['normal'],
+    });
+    if (normalWindow?.id != null && normalWindow.type === 'normal') {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        windowId: normalWindow.id,
+      });
+      if (tab) return tab;
+    }
+  } catch {
+    // Fall back to the tab that hosts the standalone popup.
+  }
+
+  return activeTab;
+}
+
+function postToPanelHost(message) {
+  if (!isEmbedded) return;
+  window.parent.postMessage(message, '*');
+}
+
 function isTypingTarget(target) {
   return target instanceof HTMLElement
     && (target.matches('input, textarea, select') || target.isContentEditable);
@@ -469,6 +510,14 @@ function focusSearch() {
 
 addFilesButton.addEventListener('click', () => {
   filePicker.click();
+});
+
+dockPanelButton.addEventListener('click', () => {
+  postToPanelHost({ type: 'nookbin:panel-dock' });
+});
+
+closePanelButton.addEventListener('click', () => {
+  postToPanelHost({ type: 'nookbin:panel-close' });
 });
 
 searchInput.addEventListener('input', () => {
@@ -489,6 +538,11 @@ for (const button of filterButtons) {
 }
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && isEmbedded) {
+    postToPanelHost({ type: 'nookbin:panel-close' });
+    return;
+  }
+
   if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k') {
     if (focusSearch()) event.preventDefault();
     return;

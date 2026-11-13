@@ -1,0 +1,13 @@
+{
+  "name": "@nooksuite/nookbin-extension",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch"
+  },
+  "dependencies": {
+    "@nooksuite/core": "*"
+  }
+}

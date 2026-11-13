@@ -1,5 +1,8 @@
-// Small promise-based IndexedDB wrapper for storing File/Blob objects.
-// Files are keyed by name in a single object store.
+// IndexedDB backend for the file storage interface.
+//
+// Files are keyed by name in a single object store. Input validation lives in
+// the storage interface (file-storage.js); this module only talks to
+// IndexedDB, which keeps it swappable for other targets.
 
 const DB_VERSION = 1;
 const STORE_NAME = 'files';
@@ -55,7 +58,7 @@ function openDatabase(name) {
 }
 
 /**
- * Open a file store backed by IndexedDB.
+ * Open an IndexedDB-backed file store.
  *
  * @param {{ name?: string }} [options]
  * @returns {Promise<{
@@ -67,7 +70,7 @@ function openDatabase(name) {
  *   close: () => void,
  * }>}
  */
-export async function getFileStorage({ name = 'file-dropper' } = {}) {
+export async function openIdbFileStorage({ name = 'file-dropper' } = {}) {
   if (typeof name !== 'string' || name.length === 0) {
     throw new TypeError('A non-empty database name is required.');
   }
@@ -85,13 +88,6 @@ export async function getFileStorage({ name = 'file-dropper' } = {}) {
 
   return {
     async put(key, blob) {
-      if (typeof key !== 'string' || key.length === 0) {
-        throw new TypeError('File names must be non-empty strings.');
-      }
-      if (!(blob instanceof Blob)) {
-        throw new TypeError('Only Blob or File values can be stored.');
-      }
-
       await run('readwrite', (store) => requestToPromise(store.put(blob, key)));
     },
 
@@ -120,5 +116,3 @@ export async function getFileStorage({ name = 'file-dropper' } = {}) {
     },
   };
 }
-
-export default getFileStorage;

@@ -3,7 +3,7 @@ import 'fake-indexeddb/auto';
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 
-import { getFileStorage } from '../../src/lib/idb-file-storage.js';
+import { getFileStorage } from '../src/index.js';
 
 const TEST_DB_PREFIX = 'file-dropper-test';
 
