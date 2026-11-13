@@ -5,6 +5,7 @@
 // static file server (or host) at dist/.
 
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { watch } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,6 +14,8 @@ import { tools } from './site/data/tools.js';
 const rootDir = dirname(fileURLToPath(import.meta.url));
 const siteDir = join(rootDir, 'site');
 const distDir = join(rootDir, 'dist');
+
+const watchMode = process.argv.includes('--watch');
 
 const TOOLS_MARKER = '<!-- tool-cards -->';
 
@@ -54,5 +57,18 @@ async function build() {
   await writeFile(indexPath, renderToolCards(html));
 }
 
-await build();
-console.log('Site built to dist/');
+if (watchMode) {
+  await build();
+  console.log('Watching for changes...');
+
+  let timer = null;
+  watch(siteDir, { recursive: true }, () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      build().catch((error) => console.error(error));
+    }, 50);
+  });
+} else {
+  await build();
+  console.log('Site built to dist/');
+}

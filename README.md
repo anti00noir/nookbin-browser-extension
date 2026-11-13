@@ -45,6 +45,11 @@ nooksuite/
 │       │   └── backends/
 │       │       └── idb-file-storage.js  # IndexedDB backend
 │       └── tests/                    # node --test unit tests
+├── apps/
+│   └── website/                      # @nooksuite/website — overview site
+│       ├── site/                     # index.html, css/, data/tools.js, fonts/
+│       ├── build.mjs                 # copies site/ → dist/, renders the tool roster
+│       └── dist/                     # static output; point any static host here
 └── tools/
     ├── nookbin/
     │   ├── extension/                # The Chrome MV3 extension
@@ -73,6 +78,13 @@ npm test           # run every workspace's unit tests
 
 Chrome's **Load unpacked** must point at `tools/nookbin/extension/dist/`, not
 the source folder. After changes, reload the extension from `chrome://extensions`.
+
+The overview website builds alongside the tools: `apps/website/dist/` is a
+plain static site with no runtime JavaScript, so you can open its
+`index.html` straight from disk or point any static host at that folder. The
+tool roster on the page is rendered at build time from
+`apps/website/site/data/tools.js` — adding a tool to the site is one data
+entry and a rebuild.
 
 There are no runtime dependencies; the extension ships only its own code and
 bundled `@nooksuite/core` logic. `esbuild` is the only build tool, and unit
