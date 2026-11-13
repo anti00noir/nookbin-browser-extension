@@ -1,0 +1,73 @@
+/* NookSuite website — suite-level styles.
+   Same family as the tools' charcoal theme, with a deeper page background
+   and a lighter touch so the site reads as "home", not as a tool. */
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-300.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-600.woff2') format('woff2');
+}
+
+:root {
+  /* Site voice: one step deeper than the tools' #191919 page background. */
+  --bg: #141414;
+  --surface: #1d1d1c;
+  --surface-raised: #232322;
+  --border: #3b3b39;
+  --border-strong: #aaa9a3;
+  --text: #f0efeb;
+  --muted: #aaa9a3;
+  --accent: #9cc7a8;
+  --planned: #e08075;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 24px 64px;
+}
